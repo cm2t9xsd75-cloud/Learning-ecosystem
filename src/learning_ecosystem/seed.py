@@ -9,6 +9,8 @@ from learning_ecosystem.database import create_database
 from learning_ecosystem.enums import (
     ArtifactType,
     ConceptRelationshipType,
+    ConceptStatus,
+    EventType,
     EvidenceStrength,
     EvidenceType,
     NodeType,
@@ -17,7 +19,12 @@ from learning_ecosystem.enums import (
 )
 from learning_ecosystem.repository import LearningEcosystemRepository
 
-CURRICULUM_ID = "pd1-poc"
+CURRICULUM_ID = "salesforce-pd1-process-automation-poc"
+LEARNER_ID = "poc-learner-001"
+SESSION_ID = "pd1-session-prior"
+NEXT_RECOMMENDED_OBJECTIVE = (
+    "Flow bulk execution semantics: interview scope, collections, Get Records, and Update Records"
+)
 RETRIEVED_AT = "2026-08-17T00:00:00+00:00"
 RELEASE = "current as of 2026-08-17"
 
@@ -96,12 +103,15 @@ FLOW_BULK_GAP = (
 @dataclass(frozen=True)
 class SeedResult:
     curriculum_id: str
+    learner_id: str
+    session_id: str
     in_scope_topic_ids: tuple[str, ...]
     concept_ids: tuple[str, ...]
     out_of_scope_node_ids: tuple[str, ...]
 
 
 def clear_pd1_seed(repo: LearningEcosystemRepository) -> None:
+    repo.delete_learner(LEARNER_ID)
     repo.delete_curriculum(CURRICULUM_ID)
     for concept_id in CONCEPT_IDS:
         repo.connection.execute("DELETE FROM concept WHERE id = ?", (concept_id,))
@@ -113,7 +123,7 @@ def clear_pd1_seed(repo: LearningEcosystemRepository) -> None:
 def seed_pd1_poc(
     repo: LearningEcosystemRepository, *, replace: bool = True
 ) -> SeedResult:
-    """Load only the Phase 2 PD1 clusters. Does not invent learner session history."""
+    """Load the six Phase 2 clusters and the POC learner snapshot."""
     if replace:
         clear_pd1_seed(repo)
     _seed_sources(repo)
@@ -121,8 +131,11 @@ def seed_pd1_poc(
     _seed_concepts(repo)
     _seed_artifacts(repo)
     _seed_relationships(repo)
+    seed_poc_learner(repo)
     return SeedResult(
         curriculum_id=CURRICULUM_ID,
+        learner_id=LEARNER_ID,
+        session_id=SESSION_ID,
         in_scope_topic_ids=IN_SCOPE_TOPIC_IDS,
         concept_ids=CONCEPT_IDS,
         out_of_scope_node_ids=tuple(
@@ -130,6 +143,269 @@ def seed_pd1_poc(
             for node in repo.list_nodes(CURRICULUM_ID, scope_status=ScopeStatus.OUT_OF_SCOPE)
         ),
     )
+
+
+POC_LEARNER_STATES = (
+    {
+        "concept": "bulkification",
+        "concept_id": CONCEPT_BULKIFICATION,
+        "node_id": NODE_BULKIFICATION,
+        "status": ConceptStatus.MASTERED,
+        "confidence": 0.9,
+        "evidence_summary": (
+            "Identified SOQL/DML-in-loop issues and explained collection-based "
+            "processing and operation scaling."
+        ),
+        "evidence": (
+            (
+                EvidenceType.APPLICATION,
+                "Identified SOQL/DML-in-loop issues.",
+                "Identified SOQL/DML in loops.",
+                EvidenceStrength.STRONG,
+            ),
+            (
+                EvidenceType.EXPLANATION,
+                "Explained collection-based processing and operation scaling.",
+                "Explained record volume vs platform-operation volume and proposed collections.",
+                EvidenceStrength.STRONG,
+            ),
+        ),
+    },
+    {
+        "concept": "SOQL",
+        "concept_id": CONCEPT_SOQL,
+        "node_id": NODE_SOQL,
+        "status": ConceptStatus.MASTERED,
+        "confidence": 0.9,
+        "evidence_summary": (
+            "Constructed basic and relationship queries and explained underlying "
+            "relationship traversal."
+        ),
+        "evidence": (
+            (
+                EvidenceType.APPLICATION,
+                "Constructed basic and relationship queries.",
+                "Wrote SELECT/FROM/WHERE and parent-relationship SOQL.",
+                EvidenceStrength.STRONG,
+            ),
+            (
+                EvidenceType.EXPLANATION,
+                "Explained underlying relationship traversal.",
+                "Explained Contact-to-Account parent field traversal.",
+                EvidenceStrength.STRONG,
+            ),
+        ),
+    },
+    {
+        "concept": "governor_limits",
+        "concept_id": CONCEPT_GOVERNORS,
+        "node_id": NODE_GOVERNORS,
+        "status": ConceptStatus.DEVELOPING,
+        "confidence": 0.65,
+        "evidence_summary": (
+            "Understands operation-vs-record distinction after correction; "
+            "numeric/dimensional model remains incomplete."
+        ),
+        "evidence": (
+            (
+                EvidenceType.CORRECTION,
+                "Corrected the belief that returning more than 150 records exceeds the SOQL query limit.",
+                "Separated query count from returned-row volume after correction.",
+                EvidenceStrength.MODERATE,
+            ),
+            (
+                EvidenceType.EXPLANATION,
+                "Understands operation-vs-record distinction; numeric/dimensional model remains incomplete.",
+                "Partial governor-limit model; dimensions still incomplete.",
+                EvidenceStrength.MODERATE,
+            ),
+        ),
+    },
+    {
+        "concept": "transactions",
+        "concept_id": CONCEPT_TRANSACTION,
+        "node_id": NODE_TRANSACTIONS,
+        "status": ConceptStatus.MASTERED,
+        "confidence": 0.85,
+        "evidence_summary": (
+            "Distinguished entry criteria from transaction boundaries and "
+            "synchronous from asynchronous execution."
+        ),
+        "evidence": (
+            (
+                EvidenceType.EXPLANATION,
+                "Distinguished entry criteria from transaction boundaries.",
+                "Separate automation components do not automatically mean separate transactions.",
+                EvidenceStrength.STRONG,
+            ),
+            (
+                EvidenceType.EXPLANATION,
+                "Distinguished synchronous from asynchronous execution.",
+                "Initiating transaction can commit before deferred work completes.",
+                EvidenceStrength.STRONG,
+            ),
+        ),
+    },
+    {
+        "concept": "declarative_vs_programmatic_automation",
+        "concept_id": CONCEPT_FLOW_VS_APEX,
+        "node_id": NODE_FLOW_VS_APEX,
+        "status": ConceptStatus.MASTERED,
+        "confidence": 0.85,
+        "evidence_summary": (
+            "Shifted from Apex-is-bulk heuristic to requirement-based Flow-vs-Apex reasoning."
+        ),
+        "evidence": (
+            (
+                EvidenceType.CORRECTION,
+                "Rejected the Apex-is-automatically-bulkified heuristic.",
+                "Corrected misconception that Apex is automatically bulkified.",
+                EvidenceStrength.STRONG,
+            ),
+            (
+                EvidenceType.EXPLANATION,
+                "Used requirement-based Flow-vs-Apex reasoning.",
+                "Selected from complexity, maintainability, transaction, and bulk requirements.",
+                EvidenceStrength.STRONG,
+            ),
+        ),
+    },
+    {
+        "concept": "flow_bulk_execution",
+        "concept_id": CONCEPT_FLOW_BULK,
+        "node_id": NODE_FLOW_BULK,
+        "status": ConceptStatus.DEVELOPING,
+        "confidence": 0.55,
+        "evidence_summary": (
+            "Understands multiple interviews in a transaction and element-level "
+            "bulkification concept; collection-scope model remains incomplete."
+        ),
+        "evidence": (
+            (
+                EvidenceType.EXPLANATION,
+                "Understands multiple Flow interviews in a transaction and element-level bulkification.",
+                "Partial Flow bulk-execution model.",
+                EvidenceStrength.MODERATE,
+            ),
+            (
+                EvidenceType.EXPLANATION,
+                "Collection-scope model remains incomplete.",
+                "Interview-local state vs cross-interview bulk database execution is unresolved.",
+                EvidenceStrength.WEAK,
+            ),
+        ),
+    },
+)
+
+
+def seed_poc_learner(repo: LearningEcosystemRepository) -> None:
+    """Persist the POC learner snapshot with evidence-backed state transitions."""
+    repo.create_learner("POC Learner", learner_id=LEARNER_ID)
+    repo.start_session(
+        learner_id=LEARNER_ID,
+        curriculum_id=CURRICULUM_ID,
+        session_id=SESSION_ID,
+    )
+    for item in POC_LEARNER_STATES:
+        repo.add_session_objective(
+            session_id=SESSION_ID,
+            curriculum_node_id=item["node_id"],
+            starting_status=ConceptStatus.NOT_STARTED,
+        )
+        last_evidence_id = None
+        for evidence_type, learner_text, assessment, strength in item["evidence"]:
+            recorded = repo.record_evidence(
+                session_id=SESSION_ID,
+                learner_id=LEARNER_ID,
+                concept_id=item["concept_id"],
+                evidence_type=evidence_type,
+                learner_text=learner_text,
+                evaluator_assessment=assessment,
+                strength=strength,
+            )
+            last_evidence_id = recorded.id
+        if item["concept"] == "governor_limits":
+            repo.record_event(
+                session_id=SESSION_ID,
+                event_type=EventType.MISCONCEPTION_DETECTED,
+                concept_id=item["concept_id"],
+                evidence_id=last_evidence_id,
+                details={
+                    "classification": "knowledge_gap",
+                    "gap": "numeric/dimensional governor-limit model remains incomplete",
+                },
+            )
+        if item["concept"] == "flow_bulk_execution":
+            repo.record_event(
+                session_id=SESSION_ID,
+                event_type=EventType.MISCONCEPTION_DETECTED,
+                concept_id=item["concept_id"],
+                evidence_id=last_evidence_id,
+                details={
+                    "classification": "knowledge_gap",
+                    "gap": "Flow interview-local state vs cross-interview bulk DB execution",
+                },
+            )
+        repo.apply_state_transition(
+            session_id=SESSION_ID,
+            learner_id=LEARNER_ID,
+            concept_id=item["concept_id"],
+            status=item["status"],
+            confidence=item["confidence"],
+            notes=item["evidence_summary"],
+            misconception_flag=item["concept"] in {"governor_limits", "flow_bulk_execution"},
+        )
+        repo.update_session_objective(
+            session_id=SESSION_ID,
+            curriculum_node_id=item["node_id"],
+            ending_status=item["status"],
+            evidence_summary=item["evidence_summary"],
+            outcome="unresolved" if item["status"] is ConceptStatus.DEVELOPING else "met",
+        )
+    repo.close_session(
+        SESSION_ID,
+        summary=(
+            "POC prior session: bulkification, SOQL, transactions, and Flow-vs-Apex "
+            "are mastered at current scope. Governor limits and Flow bulk execution "
+            "remain developing."
+        ),
+        takeaways=[
+            "Bulkification is about operation volume, not just record volume.",
+            "Apex is not automatically bulkified.",
+            "Query count and returned-row volume are separate governor dimensions.",
+        ],
+        unresolved_items=[
+            "numeric/dimensional governor-limit model remains incomplete",
+            "Flow interview-local state vs cross-interview bulk DB execution",
+            "collection-scope model remains incomplete",
+        ],
+        next_recommended_objectives=[NEXT_RECOMMENDED_OBJECTIVE, NODE_FLOW_BULK],
+    )
+
+
+def export_poc_learner_snapshot(repo: LearningEcosystemRepository) -> dict:
+    """Return the POC learner snapshot in the documented JSON shape."""
+    states = []
+    for item in POC_LEARNER_STATES:
+        state = repo.get_concept_state(LEARNER_ID, item["concept_id"])
+        if state is None:
+            continue
+        states.append(
+            {
+                "concept": item["concept"],
+                "status": state.status.value,
+                "confidence": state.confidence,
+                "evidence_summary": state.notes,
+            }
+        )
+    resume = repo.load_resume_state(LEARNER_ID)
+    next_objective = resume.next_recommended_objectives[0] if resume.next_recommended_objectives else None
+    return {
+        "learner_id": LEARNER_ID,
+        "curriculum_id": CURRICULUM_ID,
+        "concept_states": states,
+        "next_recommended_objective": next_objective,
+    }
 
 
 def _seed_sources(repo: LearningEcosystemRepository) -> None:
@@ -761,9 +1037,11 @@ def main(argv: list[str] | None = None) -> None:
     repo = LearningEcosystemRepository(create_database(args.database))
     result = seed_pd1_poc(repo)
     print(f"Seeded curriculum {result.curriculum_id}")
+    print(f"Learner {result.learner_id} session {result.session_id}")
     print(f"In-scope topics: {len(result.in_scope_topic_ids)}")
     print(f"Concepts: {len(result.concept_ids)}")
     print(f"Out-of-scope nodes: {len(result.out_of_scope_node_ids)}")
+    print(f"Next objective: {NEXT_RECOMMENDED_OBJECTIVE}")
 
 
 if __name__ == "__main__":

@@ -492,6 +492,10 @@ class LearningEcosystemRepository:
         self.connection.commit()
         return item
 
+    def delete_learner(self, learner_id: str) -> None:
+        self.connection.execute("DELETE FROM learner WHERE id = ?", (learner_id,))
+        self.connection.commit()
+
     def get_learner(self, learner_id: str) -> Learner:
         row = _require_row(
             self.connection.execute(

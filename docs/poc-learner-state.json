@@ -1,0 +1,43 @@
+{
+  "learner_id": "poc-learner-001",
+  "curriculum_id": "salesforce-pd1-process-automation-poc",
+  "concept_states": [
+    {
+      "concept": "bulkification",
+      "status": "mastered",
+      "confidence": 0.9,
+      "evidence_summary": "Identified SOQL/DML-in-loop issues and explained collection-based processing and operation scaling."
+    },
+    {
+      "concept": "SOQL",
+      "status": "mastered",
+      "confidence": 0.9,
+      "evidence_summary": "Constructed basic and relationship queries and explained underlying relationship traversal."
+    },
+    {
+      "concept": "governor_limits",
+      "status": "developing",
+      "confidence": 0.65,
+      "evidence_summary": "Understands operation-vs-record distinction after correction; numeric/dimensional model remains incomplete."
+    },
+    {
+      "concept": "transactions",
+      "status": "mastered",
+      "confidence": 0.85,
+      "evidence_summary": "Distinguished entry criteria from transaction boundaries and synchronous from asynchronous execution."
+    },
+    {
+      "concept": "declarative_vs_programmatic_automation",
+      "status": "mastered",
+      "confidence": 0.85,
+      "evidence_summary": "Shifted from Apex-is-bulk heuristic to requirement-based Flow-vs-Apex reasoning."
+    },
+    {
+      "concept": "flow_bulk_execution",
+      "status": "developing",
+      "confidence": 0.55,
+      "evidence_summary": "Understands multiple interviews in a transaction and element-level bulkification concept; collection-scope model remains incomplete."
+    }
+  ],
+  "next_recommended_objective": "Flow bulk execution semantics: interview scope, collections, Get Records, and Update Records"
+}

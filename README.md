@@ -38,7 +38,7 @@ repo = LearningEcosystemRepository(create_database("learning_ecosystem.db"))
 python3 -m learning_ecosystem.seed learning_ecosystem.db
 ```
 
-Loads only the six POC clusters (Flow vs Apex, bulkification, SOQL, governor limits, transactions, Flow bulk execution), source-traced knowledge artifacts, and out-of-scope boundary nodes. It does not expand into untested clusters or invent a learner session.
+Loads the six POC clusters, source-traced knowledge artifacts, out-of-scope boundary nodes, and `poc-learner-001` with evidence-backed concept states. Resume starts at Flow bulk execution semantics; the collection-scope gap stays unresolved.
 
 ## Out of scope for this phase
 
