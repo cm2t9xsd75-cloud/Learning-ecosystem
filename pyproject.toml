@@ -1,7 +1,7 @@
 [project]
 name = "learning-ecosystem"
 version = "0.1.0"
-description = "Learning Ecosystem POC — Phase 1 persistence"
+description = "Learning Ecosystem POC — persistence and PD1 seed"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
