@@ -14,9 +14,9 @@ The first POC is Salesforce Platform Developer I, focused on **Process Automatio
 | `session_record_example.json` | present |
 | `builder_acceptance_tests.md` | present |
 | `implementation_plan.md` | present |
-| `tutor_protocol.md` | not pasted yet |
+| `tutor_protocol.md` | present |
 
-Phase 1 is relational persistence. Phase 2 seeds the bounded knowledge base and `poc-learner-001`. Tutor runtime waits on `docs/tutor_protocol.md`.
+Phase 1 is relational persistence. Phase 2 seeds the bounded knowledge base and `poc-learner-001`. Phase 3 is the Socratic tutor runtime in `TutorRuntime`.
 
 ## Phase 1 — Persistence
 
@@ -54,6 +54,20 @@ python3 -m learning_ecosystem.seed learning_ecosystem.db
 
 Loads the six POC clusters, source-traced knowledge artifacts, out-of-scope boundary nodes, and `poc-learner-001` with evidence-backed concept states. Resume starts at Flow bulk execution semantics; the collection-scope gap stays unresolved.
 
+## Phase 3 — Tutor
+
+`TutorRuntime` loads resume state, enforces the fundamentals gate, asks one Socratic/problem question at a time, and will not switch to direct instruction during application without permission.
+
+```python
+from learning_ecosystem import TutorRuntime, create_database, seed_pd1_poc
+from learning_ecosystem.repository import LearningEcosystemRepository
+
+repo = LearningEcosystemRepository(create_database("learning_ecosystem.db"))
+seed_pd1_poc(repo)
+tutor = TutorRuntime(repo)
+turn = tutor.start_session("poc-learner-001")
+```
+
 ## Out of scope for this phase
 
-Vector retrieval, tutor dialogue, and recorder evaluation.
+Vector retrieval and a full LLM-authored dialogue loop. The recorder evaluates and persists; it does not teach.
