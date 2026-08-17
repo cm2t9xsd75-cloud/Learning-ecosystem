@@ -42,7 +42,7 @@ def test_phase7_resume_states(repo: LearningEcosystemRepository) -> None:
         "flow_bulk_execution": "developing",
     }
     assert NEXT_RECOMMENDED_OBJECTIVE in resume.next_recommended_objectives
-    assert any("collection-scope" in gap or "interview-local" in gap for gap in resume.unresolved_gaps)
+    assert any("collection scope" in gap or "interview-local" in gap for gap in resume.unresolved_gaps)
     assert resume.recent_misconceptions
 
 
