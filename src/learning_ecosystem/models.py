@@ -5,6 +5,7 @@ from typing import Any
 
 from learning_ecosystem.enums import (
     ArtifactType,
+    ConceptRelationshipType,
     ConceptStatus,
     CurriculumStatus,
     EventType,
@@ -55,6 +56,13 @@ class Concept:
     definition: str
     explanation: str
     scope_tags: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class ConceptRelationship:
+    source_concept_id: str
+    target_concept_id: str
+    relationship_type: ConceptRelationshipType
 
 
 @dataclass(frozen=True)

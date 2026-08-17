@@ -24,6 +24,15 @@ class PrerequisiteType(StrEnum):
     RECOMMENDED = "recommended"
 
 
+class ConceptRelationshipType(StrEnum):
+    PREREQUISITE = "prerequisite"
+    CONTAINS = "contains"
+    CONTRASTS_WITH = "contrasts_with"
+    DEPENDS_ON = "depends_on"
+    EXAMPLE_OF = "example_of"
+    COMMONLY_CONFUSED_WITH = "commonly_confused_with"
+
+
 class ArtifactType(StrEnum):
     DEFINITION = "definition"
     EXAMPLE = "example"

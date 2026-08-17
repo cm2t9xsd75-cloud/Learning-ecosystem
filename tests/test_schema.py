@@ -16,6 +16,8 @@ PHASE1_TABLES = {
     "session_objective",
 }
 
+DATA_MODEL_TABLES = PHASE1_TABLES | {"concept_relationship"}
+
 
 def test_phase1_tables_exist() -> None:
     connection = create_database()
@@ -25,7 +27,7 @@ def test_phase1_tables_exist() -> None:
             "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
         )
     }
-    assert PHASE1_TABLES <= names
+    assert DATA_MODEL_TABLES <= names
 
 
 def test_foreign_keys_are_enforced() -> None:

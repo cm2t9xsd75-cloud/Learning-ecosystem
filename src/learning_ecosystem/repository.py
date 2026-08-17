@@ -8,6 +8,7 @@ from typing import Any, Iterable
 
 from learning_ecosystem.enums import (
     ArtifactType,
+    ConceptRelationshipType,
     ConceptStatus,
     CurriculumStatus,
     EventType,
@@ -22,6 +23,7 @@ from learning_ecosystem.errors import NotFoundError
 from learning_ecosystem.mastery import assert_can_transition
 from learning_ecosystem.models import (
     Concept,
+    ConceptRelationship,
     ConceptStateExplanation,
     Curriculum,
     CurriculumNode,
@@ -169,16 +171,27 @@ class LearningEcosystemRepository:
         )
         return self._node_from_row(row)
 
-    def list_nodes(self, curriculum_id: str) -> list[CurriculumNode]:
-        rows = self.connection.execute(
-            """
-            SELECT * FROM curriculum_node
-            WHERE curriculum_id = ?
-            ORDER BY sequence_order, title
-            """,
-            (curriculum_id,),
-        ).fetchall()
-        return [self._node_from_row(row) for row in rows]
+    def list_nodes(
+        self,
+        curriculum_id: str,
+        *,
+        scope_status: ScopeStatus | None = None,
+        node_type: NodeType | None = None,
+    ) -> list[CurriculumNode]:
+        query = "SELECT * FROM curriculum_node WHERE curriculum_id = ?"
+        params: list[Any] = [curriculum_id]
+        if scope_status:
+            query += " AND scope_status = ?"
+            params.append(scope_status.value)
+        if node_type:
+            query += " AND node_type = ?"
+            params.append(node_type.value)
+        query += " ORDER BY sequence_order, title"
+        return [self._node_from_row(row) for row in self.connection.execute(query, params)]
+
+    def delete_curriculum(self, curriculum_id: str) -> None:
+        self.connection.execute("DELETE FROM curriculum WHERE id = ?", (curriculum_id,))
+        self.connection.commit()
 
     def add_prerequisite(
         self,
@@ -302,6 +315,72 @@ class LearningEcosystemRepository:
             concept_id,
         )
         return self._concept_from_row(row)
+
+    def get_concept_by_name(self, canonical_name: str) -> Concept:
+        row = _require_row(
+            self.connection.execute(
+                "SELECT * FROM concept WHERE canonical_name = ?", (canonical_name,)
+            ).fetchone(),
+            "Concept",
+            canonical_name,
+        )
+        return self._concept_from_row(row)
+
+    def list_concepts(self) -> list[Concept]:
+        rows = self.connection.execute(
+            "SELECT * FROM concept ORDER BY canonical_name"
+        ).fetchall()
+        return [self._concept_from_row(row) for row in rows]
+
+    def delete_concept(self, concept_id: str) -> None:
+        self.connection.execute("DELETE FROM concept WHERE id = ?", (concept_id,))
+        self.connection.commit()
+
+    def delete_source(self, source_id: str) -> None:
+        self.connection.execute("DELETE FROM source WHERE id = ?", (source_id,))
+        self.connection.commit()
+
+    def add_concept_relationship(
+        self,
+        *,
+        source_concept_id: str,
+        target_concept_id: str,
+        relationship_type: ConceptRelationshipType,
+    ) -> ConceptRelationship:
+        item = ConceptRelationship(
+            source_concept_id=source_concept_id,
+            target_concept_id=target_concept_id,
+            relationship_type=relationship_type,
+        )
+        self.connection.execute(
+            """
+            INSERT INTO concept_relationship (
+                source_concept_id, target_concept_id, relationship_type
+            ) VALUES (?, ?, ?)
+            """,
+            (
+                item.source_concept_id,
+                item.target_concept_id,
+                item.relationship_type.value,
+            ),
+        )
+        self.connection.commit()
+        return item
+
+    def list_concept_relationships(
+        self, concept_id: str | None = None
+    ) -> list[ConceptRelationship]:
+        if concept_id:
+            rows = self.connection.execute(
+                """
+                SELECT * FROM concept_relationship
+                WHERE source_concept_id = ? OR target_concept_id = ?
+                """,
+                (concept_id, concept_id),
+            ).fetchall()
+        else:
+            rows = self.connection.execute("SELECT * FROM concept_relationship").fetchall()
+        return [self._relationship_from_row(row) for row in rows]
 
     def create_source(
         self,
@@ -977,6 +1056,14 @@ class LearningEcosystemRepository:
             definition=row["definition"],
             explanation=row["explanation"],
             scope_tags=_json_loads(row["scope_tags"], []),
+        )
+
+    @staticmethod
+    def _relationship_from_row(row: sqlite3.Row) -> ConceptRelationship:
+        return ConceptRelationship(
+            source_concept_id=row["source_concept_id"],
+            target_concept_id=row["target_concept_id"],
+            relationship_type=ConceptRelationshipType(row["relationship_type"]),
         )
 
     @staticmethod

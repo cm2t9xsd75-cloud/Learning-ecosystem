@@ -43,6 +43,23 @@ CREATE TABLE IF NOT EXISTS concept (
     scope_tags TEXT NOT NULL DEFAULT '[]'
 );
 
+CREATE TABLE IF NOT EXISTS concept_relationship (
+    source_concept_id TEXT NOT NULL REFERENCES concept(id) ON DELETE CASCADE,
+    target_concept_id TEXT NOT NULL REFERENCES concept(id) ON DELETE CASCADE,
+    relationship_type TEXT NOT NULL CHECK (
+        relationship_type IN (
+            'prerequisite',
+            'contains',
+            'contrasts_with',
+            'depends_on',
+            'example_of',
+            'commonly_confused_with'
+        )
+    ),
+    PRIMARY KEY (source_concept_id, target_concept_id, relationship_type),
+    CHECK (source_concept_id <> target_concept_id)
+);
+
 CREATE TABLE IF NOT EXISTS source (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
@@ -184,6 +201,8 @@ CREATE INDEX IF NOT EXISTS idx_curriculum_node_curriculum
     ON curriculum_node (curriculum_id, sequence_order);
 CREATE INDEX IF NOT EXISTS idx_prerequisite_node
     ON prerequisite (node_id);
+CREATE INDEX IF NOT EXISTS idx_concept_relationship_source
+    ON concept_relationship (source_concept_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_artifact_concept
     ON knowledge_artifact (concept_id);
 CREATE INDEX IF NOT EXISTS idx_knowledge_artifact_source

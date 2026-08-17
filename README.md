@@ -2,7 +2,7 @@
 
 POC for a bounded tutor: curriculum, knowledge base, learner model, session history, and a recorder that evaluates evidence without teaching.
 
-Phase 1 implements relational persistence only. Curriculum seeding, tutor runtime, and the recorder loop come later.
+Phase 1 is relational persistence. Phase 2 seeds the bounded PD1 Process Automation & Logic knowledge base. Tutor runtime and the recorder loop come later.
 
 ## Phase 1 — Persistence
 
@@ -32,6 +32,14 @@ from learning_ecosystem import LearningEcosystemRepository, create_database
 repo = LearningEcosystemRepository(create_database("learning_ecosystem.db"))
 ```
 
+## Phase 2 — PD1 seed
+
+```bash
+python3 -m learning_ecosystem.seed learning_ecosystem.db
+```
+
+Loads only the six POC clusters (Flow vs Apex, bulkification, SOQL, governor limits, transactions, Flow bulk execution), source-traced knowledge artifacts, and out-of-scope boundary nodes. It does not expand into untested clusters or invent a learner session.
+
 ## Out of scope for this phase
 
-Vector retrieval, tutor dialogue, recorder evaluation, and PD1 curriculum seed data (Phase 2).
+Vector retrieval, tutor dialogue, and recorder evaluation.
