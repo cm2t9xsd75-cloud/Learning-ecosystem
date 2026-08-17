@@ -559,6 +559,23 @@ class LearningEcosystemRepository:
         )
         return self._session_from_row(row)
 
+    def list_sessions(self, learner_id: str) -> list[Session]:
+        rows = self.connection.execute(
+            """
+            SELECT * FROM session
+            WHERE learner_id = ?
+            ORDER BY started_at DESC
+            """,
+            (learner_id,),
+        ).fetchall()
+        return [self._session_from_row(row) for row in rows]
+
+    def list_sources(self) -> list[Source]:
+        rows = self.connection.execute(
+            "SELECT * FROM source ORDER BY title"
+        ).fetchall()
+        return [self._source_from_row(row) for row in rows]
+
     def add_session_objective(
         self,
         *,

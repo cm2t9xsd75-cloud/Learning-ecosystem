@@ -58,15 +58,17 @@ Loads the six POC clusters, source-traced knowledge artifacts, out-of-scope boun
 
 `TutorRuntime` loads resume state, enforces the fundamentals gate, asks one Socratic/problem question at a time, and will not switch to direct instruction during application without permission.
 
-```python
-from learning_ecosystem import TutorRuntime, create_database, seed_pd1_poc
-from learning_ecosystem.repository import LearningEcosystemRepository
+## UI
 
-repo = LearningEcosystemRepository(create_database("learning_ecosystem.db"))
-seed_pd1_poc(repo)
-tutor = TutorRuntime(repo)
-turn = tutor.start_session("poc-learner-001")
+```bash
+python3 -m pip install -e ".[dev]"
+python3 -m learning_ecosystem.web
 ```
+
+Open http://127.0.0.1:8000
+
+- **Learner:** resume or start a session, answer one question, reopen `POC-SESSION-001`
+- **Admin:** curriculum map, concepts/sources, add a sourced artifact (does not invent required fundamentals)
 
 ## Out of scope for this phase
 

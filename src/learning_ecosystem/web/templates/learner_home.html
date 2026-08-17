@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block body %}
+<p class="kicker">Learner · poc-learner-001</p>
+<h1>Pick up the thread</h1>
+<p class="lede">Mastered concepts stay in your model. The default path is the next objective, not a restart.</p>
+<div class="grid">
+  <section class="card">
+    <p class="kicker">Now</p>
+    <h2>{{ next_objective }}</h2>
+    {% if resume.unresolved_gaps %}
+      <p>Unresolved: {{ resume.unresolved_gaps[0] }}</p>
+    {% endif %}
+    <div class="row">
+      {% if active %}
+        <a class="btn" href="/learn/session/{{ active.id }}">Resume open session</a>
+      {% endif %}
+      <form method="post" action="/learn/start">
+        <button class="btn{% if active %} secondary{% endif %}" type="submit">Start a new session</button>
+      </form>
+    </div>
+  </section>
+  <section class="card">
+    <p class="kicker">Your model</p>
+    <ul class="states">
+      {% for state in states %}
+        <li><span>{{ state.name }}</span><span class="pill {{ state.status }}">{{ state.status }}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+<section>
+  <h2>Previous sessions</h2>
+  <ul class="session-list">
+    {% for session in sessions %}
+      <li>
+        <a href="/learn/session/{{ session.id }}">
+          <strong>{{ session.id }}</strong>
+          <span class="pill">{{ session.status.value }}</span>
+          <div class="context">{{ session.started_at }}{% if session.next_recommended_objectives %} · next: {{ session.next_recommended_objectives[0] }}{% endif %}</div>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

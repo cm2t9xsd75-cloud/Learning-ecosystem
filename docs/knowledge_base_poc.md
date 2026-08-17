@@ -79,7 +79,19 @@ Critical nuance:
 Interview-local state is not automatically one shared collection across all interviews.
 
 POC gap:
-The exact mechanics of collection scope, Get Records, and Update Records bulk execution must be represented explicitly in the knowledge base.
+The learner still needs a complete model of interview-local state versus cross-interview bulk database execution. Collection scope, Get Records, and Update Records are now explicit knowledge-base concepts.
+
+## Concept: Flow collection scope
+
+A collection variable belongs to one Flow interview. It is not automatically one shared list of every triggering record.
+
+## Concept: Get Records
+
+Get Records is SOQL. Compatible Get Records elements can be bulkified across interviews in the same transaction.
+
+## Concept: Update Records
+
+Update Records is DML. Compatible Update Records elements can be bulkified across interviews. Do not update inside a per-record loop.
 
 ## Scope boundary
 

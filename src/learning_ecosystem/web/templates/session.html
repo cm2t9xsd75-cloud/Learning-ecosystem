@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block body %}
+<p class="kicker">{{ session.id }} · {{ session.status.value }}</p>
+<h1>{% if node %}{{ node.title }}{% else %}Session record{% endif %}</h1>
+{% if concept %}<p class="context">Concept: {{ concept.canonical_name }}</p>{% endif %}
+
+{% if live and working %}
+  <p class="context">Context: {{ working.context_label.value }} · {{ working.mode.value }}</p>
+  {% for line in working.transcript %}
+    <div class="turn {{ line.role }}">
+      <p class="kicker">{{ line.role }}</p>
+      <p>{{ line.text }}</p>
+      {% if line.question %}<p class="question">{{ line.question }}</p>{% endif %}
+    </div>
+  {% endfor %}
+  <form method="post" action="/learn/session/{{ session.id }}/reply">
+    <label for="answer">Your answer</label>
+    <textarea id="answer" name="answer" placeholder="One thought at a time. The tutor will not skip ahead."></textarea>
+    <div class="row">
+      <button class="btn" type="submit" name="action" value="answer">Send</button>
+      <button class="btn stuck" type="submit" name="action" value="stuck">I'm stuck</button>
+      <button class="btn secondary" type="submit" name="action" value="explain">Ask for an explanation</button>
+    </div>
+  </form>
+  <form method="post" action="/learn/session/{{ session.id }}/close" style="margin-top:1rem">
+    <button class="btn secondary" type="submit">End session</button>
+  </form>
+{% elif snapshot %}
+  <section class="card">
+    <p class="kicker">What this session can explain</p>
+    <p><strong>Takeaways</strong></p>
+    <ul>{% for item in snapshot.takeaways %}<li>{{ item }}</li>{% endfor %}</ul>
+    <p><strong>Unresolved</strong></p>
+    <ul>{% for item in snapshot.unresolved_gaps %}<li>{{ item }}</li>{% endfor %}</ul>
+    <p><strong>Next</strong></p>
+    <ul>{% for item in snapshot.next_recommended_objectives %}<li>{{ item }}</li>{% endfor %}</ul>
+    <p><strong>Misconceptions / gaps</strong></p>
+    <ul>
+      {% for event in snapshot.misconceptions %}
+        <li>{{ event.event_type.value }} · {{ event.details }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}
+<p><a href="/learn">Back to learner home</a></p>
+{% endblock %}

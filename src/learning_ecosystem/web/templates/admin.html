@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block body %}
+<p class="kicker">Admin · {{ curriculum.id }}</p>
+<h1>{{ curriculum.name }}</h1>
+<p class="lede">{{ curriculum.scope_description }}</p>
+<div class="grid">
+  <section class="card">
+    <p class="kicker">In-scope sequence</p>
+    <ul class="tree">
+      {% for node in topics %}
+        <li>
+          <strong>{{ node.title }}</strong>
+          <div class="context">{{ node.node_type.value }} · {{ node.description }}</div>
+        </li>
+      {% endfor %}
+    </ul>
+    <p class="kicker" style="margin-top:1.2rem">Out of scope unless added</p>
+    <ul class="tree oos">
+      {% for node in out_scope %}
+        <li>{{ node.title }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+  <section class="card">
+    <p class="kicker">Knowledge base</p>
+    <ul class="tree">
+      {% for concept in concepts %}
+        <li><a href="/admin/concepts/{{ concept.id }}">{{ concept.canonical_name }}</a></li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+{% endblock %}

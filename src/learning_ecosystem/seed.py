@@ -76,6 +76,9 @@ CONCEPT_TRANSACTION = "pd1-concept-transaction"
 CONCEPT_ASYNC = "pd1-concept-asynchronous-execution"
 CONCEPT_RECORD_PRIOR = "pd1-concept-record-prior"
 CONCEPT_FLOW_BULK = "pd1-concept-flow-record-triggered-execution"
+CONCEPT_FLOW_COLLECTION = "pd1-concept-flow-collection-scope"
+CONCEPT_FLOW_GET = "pd1-concept-flow-get-records"
+CONCEPT_FLOW_UPDATE = "pd1-concept-flow-update-records"
 CONCEPT_FLOW_VS_APEX = "pd1-concept-flow-vs-apex"
 
 CONCEPT_IDS = (
@@ -88,6 +91,9 @@ CONCEPT_IDS = (
     CONCEPT_ASYNC,
     CONCEPT_RECORD_PRIOR,
     CONCEPT_FLOW_BULK,
+    CONCEPT_FLOW_COLLECTION,
+    CONCEPT_FLOW_GET,
+    CONCEPT_FLOW_UPDATE,
     CONCEPT_FLOW_VS_APEX,
 )
 
@@ -884,8 +890,38 @@ def _seed_concepts(repo: LearningEcosystemRepository) -> None:
             "a transaction. Salesforce can bulkify compatible database operations "
             "across interviews.",
             "Interview-local state is not automatically one shared collection across "
-            f"all interviews. {FLOW_BULK_GAP}",
+            "all interviews. Collection scope, Get Records, and Update Records are "
+            "modeled as explicit related concepts.",
             ["flow", "bulkification", "transactions"],
+        ),
+        (
+            CONCEPT_FLOW_COLLECTION,
+            "flow-collection-scope",
+            "A collection in a Flow interview is interview-local unless the platform "
+            "bulkifies a compatible database element across interviews in the same transaction.",
+            "Assigning records into a collection variable inside one interview does not "
+            "by itself create one shared list of all triggering records.",
+            ["flow", "collections", "bulkification"],
+        ),
+        (
+            CONCEPT_FLOW_GET,
+            "flow-get-records",
+            "Get Records performs SOQL. In a record-triggered transaction, Salesforce "
+            "can bulkify compatible Get Records elements across interviews so many "
+            "interviews share one query rather than one query per interview.",
+            "A Get Records element inside a loop still scales queries with iteration "
+            "count. Filter and collect, then query once.",
+            ["flow", "soql", "bulkification"],
+        ),
+        (
+            CONCEPT_FLOW_UPDATE,
+            "flow-update-records",
+            "Update Records performs DML. Compatible Update Records elements can be "
+            "bulkified across interviews in the same transaction, executing as one "
+            "DML operation over the combined records.",
+            "Updating inside a per-record loop issues DML per iteration. Build a "
+            "collection, then update once after the loop.",
+            ["flow", "dml", "bulkification"],
         ),
         (
             CONCEPT_FLOW_VS_APEX,
@@ -1099,6 +1135,69 @@ def _seed_artifacts(repo: LearningEcosystemRepository) -> None:
     )
     _artifact(
         repo,
+        "pd1-art-flow-collection-definition",
+        CONCEPT_FLOW_COLLECTION,
+        ArtifactType.DEFINITION,
+        "A collection variable belongs to one Flow interview. It is not automatically "
+        "one shared list of every triggering record in the transaction.",
+        SOURCE_FLOW_BULK,
+    )
+    _artifact(
+        repo,
+        "pd1-art-flow-collection-misconception",
+        CONCEPT_FLOW_COLLECTION,
+        ArtifactType.MISCONCEPTION,
+        "All interviews in a transaction share one collection of triggering records.",
+        SOURCE_FLOW_BULK,
+    )
+    _artifact(
+        repo,
+        "pd1-art-flow-collection-counterexample",
+        CONCEPT_FLOW_COLLECTION,
+        ArtifactType.COUNTEREXAMPLE,
+        "Each interview has its own $Record and its own variables. Cross-interview "
+        "sharing happens when the platform bulkifies a database element, not because "
+        "collections are globally shared.",
+        SOURCE_FLOW_BULK,
+    )
+    _artifact(
+        repo,
+        "pd1-art-flow-get-definition",
+        CONCEPT_FLOW_GET,
+        ArtifactType.DEFINITION,
+        "Get Records is SOQL. Compatible Get Records elements can be bulkified across "
+        "interviews in the same transaction so the platform issues one query for the batch.",
+        SOURCE_FLOW_BULK,
+    )
+    _artifact(
+        repo,
+        "pd1-art-flow-get-scenario",
+        CONCEPT_FLOW_GET,
+        ArtifactType.SCENARIO,
+        "Fifty interviews each reaching a compatible Get Records wait until interviews "
+        "pause at that element; the platform then queries once for the combined set.",
+        SOURCE_FLOW_BULK,
+    )
+    _artifact(
+        repo,
+        "pd1-art-flow-update-definition",
+        CONCEPT_FLOW_UPDATE,
+        ArtifactType.DEFINITION,
+        "Update Records is DML. Compatible Update Records elements can be bulkified "
+        "across interviews, executing one DML statement over the combined records.",
+        SOURCE_FLOW_BULK,
+    )
+    _artifact(
+        repo,
+        "pd1-art-flow-update-counterexample",
+        CONCEPT_FLOW_UPDATE,
+        ArtifactType.COUNTEREXAMPLE,
+        "An Update Records element inside a loop runs per iteration and can exhaust "
+        "DML limits. Assign to a collection, then update once after the loop.",
+        SOURCE_FLOW_BULK,
+    )
+    _artifact(
+        repo,
         "pd1-art-flow-vs-apex-definition",
         CONCEPT_FLOW_VS_APEX,
         ArtifactType.DEFINITION,
@@ -1131,6 +1230,11 @@ def _seed_relationships(repo: LearningEcosystemRepository) -> None:
         (CONCEPT_RECORD_PRIOR, CONCEPT_FLOW_BULK, ConceptRelationshipType.EXAMPLE_OF),
         (CONCEPT_FLOW_VS_APEX, CONCEPT_BULKIFICATION, ConceptRelationshipType.COMMONLY_CONFUSED_WITH),
         (CONCEPT_FLOW_BULK, CONCEPT_FLOW_VS_APEX, ConceptRelationshipType.DEPENDS_ON),
+        (CONCEPT_FLOW_COLLECTION, CONCEPT_FLOW_BULK, ConceptRelationshipType.EXAMPLE_OF),
+        (CONCEPT_FLOW_GET, CONCEPT_FLOW_BULK, ConceptRelationshipType.EXAMPLE_OF),
+        (CONCEPT_FLOW_UPDATE, CONCEPT_FLOW_BULK, ConceptRelationshipType.EXAMPLE_OF),
+        (CONCEPT_FLOW_GET, CONCEPT_FLOW_COLLECTION, ConceptRelationshipType.DEPENDS_ON),
+        (CONCEPT_FLOW_UPDATE, CONCEPT_FLOW_COLLECTION, ConceptRelationshipType.DEPENDS_ON),
     )
     for source_id, target_id, rel in pairs:
         repo.add_concept_relationship(

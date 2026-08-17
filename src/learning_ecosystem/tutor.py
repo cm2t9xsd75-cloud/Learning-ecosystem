@@ -109,6 +109,7 @@ class _WorkingState:
     awaiting_permission: bool = False
     last_learner_text: str | None = None
     unknown_count: int = 0
+    transcript: list[dict[str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -119,6 +120,9 @@ class TutorRuntime:
 
     def __post_init__(self) -> None:
         self.recorder = LearningRecorder(self.repo)
+
+    def working_state(self, session_id: str) -> _WorkingState | None:
+        return self._state.get(session_id)
 
     def start_session(self, learner_id: str, session_id: str | None = None) -> TutorTurn:
         resume = self.repo.load_resume_state(learner_id)
@@ -180,6 +184,7 @@ class TutorRuntime:
             f"{skip_note}Current context: {context.value}. "
             f"Next objective: {node.title}."
         )
+        working.transcript.append({"role": "tutor", "text": message, "question": question})
         return TutorTurn(
             session_id=session.id,
             learner_id=learner_id,
@@ -204,6 +209,7 @@ class TutorRuntime:
         frustrated: bool | None = None,
     ) -> TutorTurn:
         working = self._state[session_id]
+        working.transcript.append({"role": "learner", "text": learner_text, "question": ""})
         text = learner_text.strip()
         frustrated = self._is_frustrated(text, working) if frustrated is None else frustrated
         requested_di = self._requested_di(text)
@@ -473,7 +479,7 @@ class TutorRuntime:
                 f"entering {target_context.value}. {message}"
             )
             working.context_label = target_context
-        return TutorTurn(
+        turn = TutorTurn(
             session_id=working.session_id,
             learner_id=working.learner_id,
             mode=working.mode,
@@ -488,6 +494,10 @@ class TutorRuntime:
             out_of_scope=out_of_scope,
             revealed_answer=revealed,
         )
+        working.transcript.append(
+            {"role": "tutor", "text": message, "question": question or ""}
+        )
+        return turn
 
     def signal_context_reset(
         self, session_id: str, new_context: ContextLabel

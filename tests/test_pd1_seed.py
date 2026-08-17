@@ -2,10 +2,8 @@ from learning_ecosystem.enums import ArtifactType, NodeType, ScopeStatus
 from learning_ecosystem.repository import LearningEcosystemRepository
 from learning_ecosystem.seed import (
     CONCEPT_BULKIFICATION,
-    CONCEPT_FLOW_BULK,
     CONCEPT_QUERY_COUNT,
     CURRICULUM_ID,
-    FLOW_BULK_GAP,
     IN_SCOPE_TOPIC_IDS,
     seed_pd1_poc,
 )
@@ -45,6 +43,9 @@ def test_seed_concepts_and_misconceptions(repo: LearningEcosystemRepository) -> 
         "asynchronous-execution",
         "record-prior",
         "flow-record-triggered-execution",
+        "flow-collection-scope",
+        "flow-get-records",
+        "flow-update-records",
         "flow-vs-apex",
         "governor-limits",
         "soql",
@@ -80,11 +81,14 @@ def test_at11_every_artifact_has_official_source(repo: LearningEcosystemReposito
             assert source.version_or_release
 
 
-def test_flow_bulk_gap_is_explicit(repo: LearningEcosystemRepository) -> None:
+def test_flow_collection_get_update_are_explicit(repo: LearningEcosystemRepository) -> None:
     seed_pd1_poc(repo)
-    contents = [item.content for item in repo.list_artifacts_for_concept(CONCEPT_FLOW_BULK)]
-    assert any(FLOW_BULK_GAP in content for content in contents)
-    assert any("interview-local" in content for content in contents)
+    names = {concept.canonical_name for concept in repo.list_concepts()}
+    assert {"flow-collection-scope", "flow-get-records", "flow-update-records"} <= names
+    collection = repo.get_concept_by_name("flow-collection-scope")
+    artifacts = repo.list_artifacts_for_concept(collection.id)
+    assert any(item.artifact_type is ArtifactType.MISCONCEPTION for item in artifacts)
+    assert repo.list_sources_for_concept(collection.id)
 
 
 def test_out_of_scope_boundary_nodes(repo: LearningEcosystemRepository) -> None:

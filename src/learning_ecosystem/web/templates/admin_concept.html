@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block body %}
+<p class="kicker"><a href="/admin">Curriculum</a> · concept</p>
+<h1>{{ concept.canonical_name }}</h1>
+<p>{{ concept.definition }}</p>
+<p class="lede">{{ concept.explanation }}</p>
+<h2>Sources</h2>
+{% for source in sources %}
+  <p><a href="{{ source.url }}">{{ source.title }}</a> · {{ source.authority }} · {{ source.version_or_release }}</p>
+{% endfor %}
+<h2>Artifacts</h2>
+{% for artifact in artifacts %}
+  <div class="artifact">
+    <span class="pill">{{ artifact.artifact_type.value }}</span>
+    <p>{{ artifact.content }}</p>
+  </div>
+{% endfor %}
+<section class="card">
+  <p class="kicker">Add knowledge</p>
+  <p class="lede">New facts need a source. This does not add an out-of-scope topic to the required path.</p>
+  <form method="post" action="/admin/concepts/{{ concept.id }}/artifacts">
+    <label>Type</label>
+    <select name="artifact_type">
+      {% for item in artifact_types %}<option value="{{ item }}">{{ item }}</option>{% endfor %}
+    </select>
+    <label>Content</label>
+    <textarea name="content" required></textarea>
+    <label>Source title</label>
+    <input name="source_title" required>
+    <label>Source URL</label>
+    <input name="source_url" placeholder="https://">
+    <label>Authority</label>
+    <input name="source_authority" value="Salesforce">
+    <div class="row" style="margin-top:1rem">
+      <button class="btn" type="submit">Save artifact</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
