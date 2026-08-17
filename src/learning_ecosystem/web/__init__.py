@@ -1,3 +1,3 @@
-from learning_ecosystem.web.app import app, create_app
+from learning_ecosystem.web.app import create_app
 
-__all__ = ["app", "create_app"]
+__all__ = ["create_app"]

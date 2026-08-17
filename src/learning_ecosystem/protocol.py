@@ -23,6 +23,7 @@ class ErrorClass(StrEnum):
     TUTOR_AMBIGUITY = "tutor_ambiguity"
     CONTEXT_MISMATCH = "context_mismatch"
     KNOWLEDGE_GAP = "knowledge_gap"
+    MISCONCEPTION = "misconception"
     CORRECTED_MISCONCEPTION = "corrected_misconception"
 
 

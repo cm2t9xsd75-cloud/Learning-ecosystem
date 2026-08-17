@@ -39,7 +39,7 @@ def create_app(database: str = "learning_ecosystem.db") -> FastAPI:
 
     @app.get("/")
     def landing(request: Request):
-        return templates.TemplateResponse("landing.html", {"request": request, "title": "Start"})
+        return templates.TemplateResponse(request, "landing.html", {"title": "Start"})
 
     @app.get("/learn")
     def learner_home(request: Request):
@@ -54,9 +54,7 @@ def create_app(database: str = "learning_ecosystem.db") -> FastAPI:
             for state in resume.concept_states
         ]
         active = next((item for item in sessions if item.status is SessionStatus.ACTIVE), None)
-        return templates.TemplateResponse(
-            "learner_home.html",
-            {
+        return templates.TemplateResponse(request, "learner_home.html", {
                 "request": request,
                 "title": "Learn",
                 "resume": resume,
@@ -82,9 +80,7 @@ def create_app(database: str = "learning_ecosystem.db") -> FastAPI:
         snapshot = None
         if not live:
             snapshot = repo.session_close_snapshot(session_id)
-        return templates.TemplateResponse(
-            "session.html",
-            {
+        return templates.TemplateResponse(request, "session.html", {
                 "request": request,
                 "title": "Session",
                 "session": session,
@@ -125,9 +121,7 @@ def create_app(database: str = "learning_ecosystem.db") -> FastAPI:
         concepts = repo.list_concepts()
         in_scope = [node for node in nodes if node.scope_status is ScopeStatus.IN_SCOPE]
         out_scope = [node for node in nodes if node.scope_status is ScopeStatus.OUT_OF_SCOPE]
-        return templates.TemplateResponse(
-            "admin.html",
-            {
+        return templates.TemplateResponse(request, "admin.html", {
                 "request": request,
                 "title": "Curriculum",
                 "curriculum": repo.get_curriculum(CURRICULUM_ID),
@@ -143,9 +137,7 @@ def create_app(database: str = "learning_ecosystem.db") -> FastAPI:
         concept = repo.get_concept(concept_id)
         artifacts = repo.list_artifacts_for_concept(concept_id)
         sources = repo.list_sources_for_concept(concept_id)
-        return templates.TemplateResponse(
-            "admin_concept.html",
-            {
+        return templates.TemplateResponse(request, "admin_concept.html", {
                 "request": request,
                 "title": concept.canonical_name,
                 "concept": concept,
