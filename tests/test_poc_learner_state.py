@@ -12,7 +12,7 @@ from learning_ecosystem.seed import (
     seed_pd1_poc,
 )
 
-SNAPSHOT_PATH = Path(__file__).resolve().parents[1] / "docs" / "poc-learner-state.json"
+SNAPSHOT_PATH = Path(__file__).resolve().parents[1] / "docs" / "learner_state_example.json"
 
 
 def test_poc_learner_snapshot_matches_documented_state(

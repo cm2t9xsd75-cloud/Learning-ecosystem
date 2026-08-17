@@ -2,7 +2,21 @@
 
 POC for a bounded tutor: curriculum, knowledge base, learner model, session history, and a recorder that evaluates evidence without teaching.
 
-Phase 1 is relational persistence. Phase 2 seeds the bounded PD1 Process Automation & Logic knowledge base. Tutor runtime and the recorder loop come later.
+The first POC is Salesforce Platform Developer I, focused on **Process Automation and Logic**. Specs live in `docs/` (see `docs/handoff.md`):
+
+| Handoff file | Status |
+| --- | --- |
+| `architecture.md` | present |
+| `data_model.md` | present |
+| `curriculum_poc.md` | present |
+| `knowledge_base_poc.md` | present |
+| `learner_state_example.json` | present |
+| `builder_acceptance_tests.md` | present |
+| `implementation_plan.md` | present |
+| `tutor_protocol.md` | not pasted yet |
+| `session_record_example.json` | not pasted yet |
+
+Phase 1 is relational persistence. Phase 2 seeds the bounded knowledge base and `poc-learner-001`. Tutor runtime waits on `docs/tutor_protocol.md`.
 
 ## Phase 1 — Persistence
 
