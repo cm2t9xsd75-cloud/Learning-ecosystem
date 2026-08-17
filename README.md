@@ -11,10 +11,10 @@ The first POC is Salesforce Platform Developer I, focused on **Process Automatio
 | `curriculum_poc.md` | present |
 | `knowledge_base_poc.md` | present |
 | `learner_state_example.json` | present |
+| `session_record_example.json` | present |
 | `builder_acceptance_tests.md` | present |
 | `implementation_plan.md` | present |
 | `tutor_protocol.md` | not pasted yet |
-| `session_record_example.json` | not pasted yet |
 
 Phase 1 is relational persistence. Phase 2 seeds the bounded knowledge base and `poc-learner-001`. Tutor runtime waits on `docs/tutor_protocol.md`.
 
